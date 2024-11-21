@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Sekolah</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-5">
+        <div class="flex justify-between items-center mb-5">
+            <h1 class="text-2xl font-bold">Admin Sekolah</h1>
+            <div>
+                <span id="username" class="mr-4">Welcome, Admin</span>
+                <button onclick="logout()" class="bg-red-500 text-white py-2 px-4 rounded">Logout</button>
+            </div>
+        </div>
+        <div class="mb-5">
+            <input type="text" id="search" placeholder="Cari Sekolah..." class="p-2 border border-gray-300 rounded">
+            <button onclick="searchFunction()" class="ml-2 bg-blue-500 text-white py-2 px-4 rounded">Cari</button>
+            <button onclick="window.location.href='tambah.html'" class="ml-2 bg-green-500 text-white py-2 px-4 rounded">Tambah Sekolah</button>
+        </div>
+
+        <table class="min-w-full bg-white border border-gray-300">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">No</th>
+                    <th class="py-2 px-4 border-b">Nama Sekolah</th>
+                    <th class="py-2 px-4 border-b">Latitude</th>
+                    <th class="py-2 px-4 border-b">Longitude</th>
+                    <th class="py-2 px-4 border-b">Nama Gambar</th>
+                    <th class="py-2 px-4 border-b">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="schoolTable">
+                <!-- Data Sekolah akan ditampilkan di sini -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Check if the user is logged in
+        fetch('/api/check-session') // Create this endpoint to check session
+            .then(response => {
+                if (!response.ok) {
+                    window.location.href = '/login'; // Redirect to login if not authenticated
+                }
+            })
+            .catch(error => {
+                console.error('Error checking session:', error);
+                window.location.href = '/login'; // Redirect to login on error
+            });
+
+        function searchFunction() {
+    const searchInput = document.getElementById('search').value.toLowerCase();
+    const rows = document.querySelectorAll('#schoolTable tr');
+
+    rows.forEach(row => {
+        const schoolName = row.cells[1].textContent.toLowerCase(); // Mengambil nama sekolah
+        if (schoolName.includes(searchInput)) {
+            row.style.display = ''; // Tampilkan baris jika cocok
+        } else {
+            row.style.display = 'none'; // Sembunyikan baris jika tidak cocok
+        }
+    });
+}
+
+        // Fungsi untuk memuat data sekolah dari API dan menampilkannya di tabel
+function loadSchools() {
+    fetch('http://localhost:5000/api/sekolah')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const tableBody = document.getElementById('schoolTable');
+            tableBody.innerHTML = '';
+            data.forEach(school => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${school.no}</td>
+                    <td class="py-2 px-4 border-b">${school.sekolah}</td>
+                    <td class="py-2 px-4 border-b">${school.latitude}</td>
+                    <td class="py-2 px-4 border-b">${school.longitude}</td>
+                    <td class="py-2 px-4 border-b">${school.nama_gambar}</td>
+                    <td class="py-2 px-4 border-b">
+                        <button onclick="editSchool(${school.no})" class="bg-yellow-500 text-white py-1 px-3 rounded">Edit</button>
+                        <button onclick="deleteSchool(${school.no})" class="bg-red-500 text-white py-1 px-3 rounded">Hapus</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching schools:', error);
+            alert('Gagal memuat data sekolah');
+        });
+}
+
+
+        // Fungsi untuk mengarahkan ke halaman edit
+        function editSchool(no) {
+            window.location.href = `edit.html?no=${no}`;
+        }
+
+        // Fungsi untuk menghapus sekolah
+        function deleteSchool(no) {
+            if (confirm('Apakah Anda yakin ingin menghapus sekolah ini?')) {
+                fetch(`http://localhost:5000/api/sekolah/${no}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Sekolah dihapus dengan sukses');
+                        loadSchools(); // Muat ulang data setelah menghapus
+                    } else {
+                        alert('Gagal menghapus sekolah');
+                    }
+                });
+            }
+        }
+
+        function logout() {
+            fetch('/api/admin/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed');
+                }
+            });
+        }
+
+        // Muat data sekolah saat halaman dimuat
+        window.onload = loadSchools;
+    </script>
+</body>
+</html>

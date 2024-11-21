@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Sekolah</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-5">
+        <h1 class="text-2xl font-bold mb-5">Tambah Sekolah</h1>
+        <form id="addSchoolForm">
+            <div class="mb-4">
+                <label for="sekolah" class="block text-gray-700">Nama Sekolah:</label>
+                <input type="text" id="sekolah" required class="p-2 border border-gray-300 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label for="latitude" class="block text-gray-700">Latitude:</label>
+                <input type="text" id="latitude" required class="p-2 border border-gray-300 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label for="longitude" class="block text-gray-700">Longitude:</label>
+                <input type="text" id="longitude" required class="p-2 border border-gray-300 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label for="nama_gambar" class="block text-gray-700">Nama Gambar:</label>
+                <input type="text" id="nama_gambar" required class="p-2 border border-gray-300 rounded w-full">
+            </div>
+            <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Tambah Sekolah</button>
+            <button type="button" onclick="window.location.href='admin.html'" class="ml-2 bg-gray-500 text-white py-2 px-4 rounded">Kembali</button>
+        </form>
+    </div>
+
+    <script>
+        // Check if the user is logged in
+        fetch('/api/check-session')
+            .then(response => {
+                if (!response.ok) {
+                    window.location.href = '/login'; // Redirect to login if not authenticated
+                }
+            })
+            .catch(error => {
+                console.error('Error checking session:', error);
+                window.location.href = '/login'; // Redirect to login on error
+            });
+
+        document.getElementById('addSchoolForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Mencegah reload halaman
+            
+            const sekolah = document.getElementById('sekolah').value;
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+            const nama_gambar = document.getElementById('nama_gambar').value;
+
+            fetch('http://localhost:5000/api/sekolah', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ sekolah, latitude, longitude, nama_gambar })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Sekolah berhasil ditambahkan!');
+                    window.location.href = 'admin.html'; // Kembali ke halaman admin
+                } else {
+                    alert('Gagal menambahkan sekolah.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
